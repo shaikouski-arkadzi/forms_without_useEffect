@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUpdateUser, useUser } from "./api";
 
 type FormData = {
@@ -7,40 +7,30 @@ type FormData = {
   phone: string;
 };
 
+const initialFormState = {
+  name: "",
+  email: "",
+  phone: "",
+};
+
 function App({ id }: { id: string }) {
   const userQuery = useUser(id);
   const updateUserMutation = useUpdateUser();
 
-  const [isDirty, setIsDirty] = useState(false);
-  const [formData, setFormData] = useState<Partial<FormData>>({
-    name: "",
-    email: "",
-    phone: "",
-  });
+  // Храним данные что вводит пользователь в форму
+  const [userFormData, setFormData] = useState<Partial<FormData>>({});
 
-  useEffect(() => {
-    if (userQuery.data) {
-      setFormData(userQuery.data);
-    }
-  }, [userQuery.data]);
-
-  useEffect(() => {
-    setIsDirty(
-      Object.entries(formData).some(
-        ([key, value]) => userQuery.data?.[key as never] !== value
-      )
-    );
-  }, [formData, userQuery.data]);
-
-  const reset = () => {
-    setFormData(
-      userQuery.data ?? {
-        name: "",
-        email: "",
-        phone: "",
-      }
-    );
+  const formData = {
+    ...initialFormState,
+    ...userQuery.data,
+    ...userFormData,
   };
+
+  const isDirty = Object.entries(userFormData).some(
+    ([key, value]) => userQuery.data?.[key as never] !== value
+  );
+
+  const reset = () => setFormData({});
 
   const handleSubmit = async (e: React.MouseEvent<HTMLFormElement>) => {
     e.preventDefault();
